@@ -1,6 +1,20 @@
 # Audit contract
 
-Every audit domain (`frontend`, `backend`, `infra`, `tests`, `e2e`, `assets`) follows this contract, and `/audit:all` relies on it to run several domains together and merge their results. A domain skill adds its own discovery, questions, and checks. It does not redefine anything here.
+Every audit domain (`frontend`, `backend`, `infra`, `tests`, `e2e`, `assets`) follows this contract, and `/all` relies on it to run several domains together and merge their results. A domain skill adds its own discovery, questions, and checks. It does not redefine anything here.
+
+## Tools and names per harness
+
+The skills name actions, not tools. Map them to whatever harness you are running in:
+
+| Action in a skill | Cursor | Claude Code |
+|---|---|---|
+| the structured question tool | `AskQuestion` | `AskUserQuestion` |
+| dispatch a subagent | `Task` with `subagent_type` | `Agent` |
+| a shell command | `Shell` | `Bash` |
+| the `auditor` subagent | `auditor` | `audit:auditor` |
+| `/all`, `/frontend`, … | `/all`, `/frontend`, … | `/audit:all`, `/audit:frontend`, … |
+
+Paths inside the plugin (this contract, each domain's `SKILL.md`) are resolved relative to the `SKILL.md` you were given, never from an environment variable.
 
 ## Ground rules
 
@@ -40,7 +54,7 @@ Rank findings by **severity, then breadth** (how many repos or how much of the c
 
 ## Finding format
 
-Record every finding with these fields. Domains return them in this shape so `/audit:all` can merge them.
+Record every finding with these fields. Domains return them in this shape so `/all` can merge them.
 
 | Field | Content |
 |---|---|
@@ -62,11 +76,11 @@ A domain run asks the user questions at exactly two points and proceeds on its o
 - **Gate 1, after discovery:** confirm the inventory.
 - **Gate 2, after the stack baseline:** priorities, permission to run commands, depth, and steering.
 
-Ask with the AskUserQuestion tool: at most 4 questions per call, each with 2–4 options, your recommended option first and marked "(Recommended)". If the user skips or dismisses a question, use the domain's stated default and list every default you assumed in the next message.
+Ask with the structured question tool: at most 4 questions per call, each with 2–4 options, your recommended option first and marked "(Recommended)". If the user skips or dismisses a question, use the domain's stated default and list every default you assumed in the next message.
 
 ## Delegated mode
 
-`/audit:all` runs the gates once for every domain and then hands each domain to an `audit:auditor` agent. When a domain skill runs in delegated mode:
+`/all` runs the gates once for every domain and then hands each domain to an `auditor` subagent (`audit:auditor` in Claude Code). When a domain skill runs in delegated mode:
 
 - The calling prompt gives you the confirmed inventory, every map your domain builds in Phase 1 (service map, delivery paths, risk map, journey map) as corrected at Gate 1, and the Gate 2 answers. Ask nothing and skip both gates.
 - If a map your domain builds in Phase 1 is missing, rebuild it before continuing, and note under `Could not verify` that the user didn't confirm it. Defaults are no substitute for the map.
@@ -95,4 +109,4 @@ Each concern has one owner domain:
 | CI/CD pipelines, containers, IaC, cloud config | `infra` | `frontend` and `backend` check only that lint, typecheck, and tests gate merges |
 | Server side of full-stack apps | `backend` | `frontend` checks only what leaks to the client |
 
-When `/audit:all` tells you the owner of one of your checks is also running, do only a light pass on that check and record a one-line pointer: `See <domain> audit.` When the owner is not running, do the check in full.
+When `/all` tells you the owner of one of your checks is also running, do only a light pass on that check and record a one-line pointer: `See <domain> audit.` When the owner is not running, do the check in full.

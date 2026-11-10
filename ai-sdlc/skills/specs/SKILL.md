@@ -5,7 +5,7 @@ argument-hint: "feature-slug"
 disable-model-invocation: true
 ---
 
-# /ai-sdlc:specs — Write Specifications
+# /specs — Write Specifications
 
 You are running **stage 2 of 7** of the AI SDLC (`intent → specs → design → plan → review → build → verify`).
 Your job is to define **what** the system must do, precisely enough that every requirement can be tested and every goal is covered.
@@ -13,11 +13,11 @@ Be rigorous and specific. Don't praise, and don't pad. Do **not** choose archite
 
 ## Input
 
-`$ARGUMENTS` — the feature slug. If empty, list folders under `docs/ai-sdlc/` and ask which one.
+**Arguments** (the text after the command) — the feature slug. If empty, list folders under `docs/ai-sdlc/` and ask which one.
 
 ## Preconditions
 
-- `docs/ai-sdlc/<slug>/01-intent.md` exists. If not, stop and tell the user to run `/ai-sdlc:intent` first.
+- `docs/ai-sdlc/<slug>/01-intent.md` exists. If not, stop and tell the user to run `/intent` first.
 - If the intent is not `Status: Approved`, warn the user and ask whether to continue.
 - If `02-specs.md` already exists, switch to **revise mode** (see the end of this file).
 
@@ -43,7 +43,7 @@ Work through every area below that the feature touches. Skip an area only if it 
 - **Glossary** — the canonical name for every domain term, so later documents use the same words.
 - **Out of scope** — carried over from the intent's non-goals, plus anything newly excluded and why.
 
-Ask questions with the AskUserQuestion tool in batches of up to 4, highest impact first. Each question gets 2–4 concrete options, with your recommended option first and marked "(Recommended)". Don't ask about things you can decide yourself with a sensible default; list those as **Assumptions I'll apply** so the user can veto them.
+Ask questions with the structured question tool (`AskQuestion` in Cursor, `AskUserQuestion` in Claude Code) in batches of up to 4, highest impact first. Each question gets 2–4 concrete options, with your recommended option first and marked "(Recommended)". Don't ask about things you can decide yourself with a sensible default; list those as **Assumptions I'll apply** so the user can veto them.
 
 ## 3. Self-check
 
@@ -73,7 +73,7 @@ Read [templates/specs.md](templates/specs.md) before writing, in either mode.
 ## 4. Write and present
 
 - Write `docs/ai-sdlc/<slug>/02-specs.md` following the Template section above, with `Status: Draft`.
-- Present: the requirement count by area, the traceability table, the assumptions applied, and any remaining open questions (asked via AskUserQuestion as above).
+- Present: the requirement count by area, the traceability table, the assumptions applied, and any remaining open questions (asked via the structured question tool as above).
 - Revise until the user approves. Then set `Status: Approved` and today's date.
 - Don't commit. Finish with `git diff --stat docs/ai-sdlc/<slug>/`.
 
@@ -84,7 +84,7 @@ Read [templates/specs.md](templates/specs.md) before writing, in either mode.
 - No open question remains that would block design.
 - The user has explicitly approved the specs.
 
-When done, tell the user the next step is `/ai-sdlc:design <slug>`.
+When done, tell the user the next step is `/design <slug>`.
 
 ## Revise mode
 

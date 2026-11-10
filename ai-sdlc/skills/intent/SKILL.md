@@ -5,7 +5,7 @@ argument-hint: "feature name or one-line idea"
 disable-model-invocation: true
 ---
 
-# /ai-sdlc:intent — Capture Intent
+# /intent — Capture Intent
 
 You are running **stage 1 of 7** of the AI SDLC (`intent → specs → design → plan → review → build → verify`).
 Your job is to turn a rough idea into a clear, agreed, measurable statement of intent that every later stage traces back to.
@@ -13,7 +13,7 @@ Be rigorous and specific. Don't praise, and don't pad. Do **not** write requirem
 
 ## Input
 
-`$ARGUMENTS` — a feature name or short idea. If empty, ask the user what they want to build.
+**Arguments** (the text after the command) — a feature name or short idea. If empty, ask the user what they want to build.
 
 ## 0. Set up
 
@@ -44,7 +44,7 @@ Work out the following with the user. Settle what you can from the context yours
 - **Risks:** what could make this fail or cause harm (product, technical, legal, operational).
 - **Open questions** that must be answered before specs.
 
-Ask questions with the AskUserQuestion tool in batches of up to 4, most important first. Each question gets 2–4 concrete options, with your recommended option first and marked "(Recommended)". Don't ask about things you can decide yourself with a sensible default; list those as **Assumptions I'll apply** so the user can veto them.
+Ask questions with the structured question tool (`AskQuestion` in Cursor, `AskUserQuestion` in Claude Code) in batches of up to 4, most important first. Each question gets 2–4 concrete options, with your recommended option first and marked "(Recommended)". Don't ask about things you can decide yourself with a sensible default; list those as **Assumptions I'll apply** so the user can veto them.
 
 ## 3. Self-check
 
@@ -72,7 +72,7 @@ Read [templates/intent.md](templates/intent.md) before writing, in either mode.
 ## 4. Write and present
 
 - Write `docs/ai-sdlc/<slug>/01-intent.md` following the Template section above, with `Status: Draft`.
-- Present: a two-line summary, the goals with their metrics, the assumptions applied, and any remaining open questions (asked via AskUserQuestion as above).
+- Present: a two-line summary, the goals with their metrics, the assumptions applied, and any remaining open questions (asked via the structured question tool as above).
 - Revise until the user approves. Then set `Status: Approved` and today's date.
 - Don't commit. Finish with `git diff --stat docs/ai-sdlc/<slug>/`.
 
@@ -82,7 +82,7 @@ Read [templates/intent.md](templates/intent.md) before writing, in either mode.
 - No open question remains that would block specs.
 - The user has explicitly approved the intent.
 
-When done, tell the user the next step is `/ai-sdlc:specs <slug>`.
+When done, tell the user the next step is `/specs <slug>`.
 
 ## Revise mode
 

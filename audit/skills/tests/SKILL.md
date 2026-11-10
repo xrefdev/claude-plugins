@@ -5,7 +5,7 @@ argument-hint: "[path ...] [focus, e.g. \"gaps, flakiness\"] [--delegated]"
 disable-model-invocation: true
 ---
 
-# /audit:tests — Test Suite Audit
+# /tests — Test Suite Audit
 
 You are a senior engineer who specialises in testing, doing a **read-only** audit of the automated tests in this workspace. The question you answer is: **would these tests catch the bugs that matter, quickly and reliably?** Line coverage is one input to that answer, not the answer.
 
@@ -13,21 +13,17 @@ Discover the suites, research current best practice for the exact tooling, ask t
 
 ## Before you start
 
-Read the shared audit contract and follow it throughout. It defines the ground rules, evidence and confidence tags, severity, the finding format, the gates, delegated mode, and the overlap rule:
-
-```bash
-cat "${CLAUDE_PLUGIN_ROOT}/references/contract.md"
-```
+Read the shared audit contract and follow it throughout. It defines the ground rules, evidence and confidence tags, severity, the finding format, the gates, delegated mode, the overlap rule, and the tool names for each harness. It lives at `references/contract.md` in the plugin root, two directories above this `SKILL.md`: `<plugin>/skills/<domain>/SKILL.md` → `<plugin>/references/contract.md`.
 
 Finding IDs use the prefix `TST-`.
 
 ## Input
 
-`$ARGUMENTS` (all optional):
+Arguments, the text after the command (all optional):
 
 - **Paths:** limit discovery to these directories. With none, scan the whole workspace.
 - **Focus:** free text such as "gaps, flakiness". Treat it as the Gate 2 priority answer and don't ask that again.
-- **`--delegated`**, or a calling prompt from `/audit:all` that includes an inventory and Gate 2 answers: run in delegated mode.
+- **`--delegated`**, or a calling prompt from `/all` that includes an inventory and Gate 2 answers: run in delegated mode.
 
 ## Scope
 
@@ -45,7 +41,7 @@ Finding IDs use the prefix `TST-`.
 3. For each suite, collect: path, language, runner and version, test types present (unit / integration / component / contract), counts of test files and test cases (`rg -c` on the runner's test declaration), source files covered, coverage tool and threshold, CI job that runs it, and the last commit to the tests.
 4. Build the **risk map**, the core of this audit. For each unit, list its critical areas: authentication and authorisation, payments and money, data writes and migrations, public APIs, parsing of external input, concurrency, and anything the docs or user call critical. Then add **churn**: the files changed most in the last 6 months (`git log --since=6.months --name-only --format= | sort | uniq -c | sort -rn | head -30`) and the files touched by commits whose messages say fix, bug, hotfix, or revert. For each critical or high-churn file, note whether a test exercises it.
 
-**Gate 1.** Show the suite inventory and the top of the risk map, then ask with AskUserQuestion:
+**Gate 1.** Show the suite inventory and the top of the risk map, then ask with the structured question tool:
 
 - Is this inventory complete and correct? (Yes / Some are missing or wrong, tell me which)
 - Are the critical areas right? (Yes (Recommended) / Add or remove some, tell me in Other)
@@ -59,7 +55,7 @@ For each distinct runner and language:
 2. Research current best practice **with web search, not memory**, for those exact versions: the runner's support status, its recommended configuration (isolation, parallelism, fake timers, strict mode), deprecated APIs, recommended lint rules for tests (e.g. `eslint-plugin-jest`/`vitest`, `flake8-pytest-style`), and current guidance for the framework under test (e.g. Testing Library for UI, the framework's own testing docs). Cite the source and date for each. If web search is unavailable, follow the contract's fallback.
 3. Write a one-paragraph "what good looks like" baseline per stack.
 
-**Gate 2.** Ask with one AskUserQuestion call. Skip any question already answered by `$ARGUMENTS`.
+**Gate 2.** Ask with one structured-question call. Skip any question already answered by the arguments.
 
 1. **Priority.** "Which matters most?" Options: Gaps on critical paths first, with the default order (Recommended) / Flakiness and reliability first / Speed and feedback loop first / Test design quality first. The default order is risk gaps → effectiveness → determinism → coverage gating → speed → maintainability → tooling.
 2. **Commands.** "What may I run?" Options:

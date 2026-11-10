@@ -5,7 +5,7 @@ argument-hint: "[path ...] [focus, e.g. \"flakiness, coverage\"] [--delegated]"
 disable-model-invocation: true
 ---
 
-# /audit:e2e — End-to-End Test Audit
+# /e2e — End-to-End Test Audit
 
 You are a senior quality engineer doing a **read-only** audit of the end-to-end and system-level tests in this workspace. The question you answer is: **do these suites prove the critical user journeys work in a production-like setup, and can the team trust a red or green result?**
 
@@ -13,21 +13,17 @@ Discover the suites, research current best practice for the exact tools, ask the
 
 ## Before you start
 
-Read the shared audit contract and follow it throughout. It defines the ground rules, evidence and confidence tags, severity, the finding format, the gates, delegated mode, and the overlap rule:
-
-```bash
-cat "${CLAUDE_PLUGIN_ROOT}/references/contract.md"
-```
+Read the shared audit contract and follow it throughout. It defines the ground rules, evidence and confidence tags, severity, the finding format, the gates, delegated mode, the overlap rule, and the tool names for each harness. It lives at `references/contract.md` in the plugin root, two directories above this `SKILL.md`: `<plugin>/skills/<domain>/SKILL.md` → `<plugin>/references/contract.md`.
 
 Finding IDs use the prefix `E2E-`.
 
 ## Input
 
-`$ARGUMENTS` (all optional):
+Arguments, the text after the command (all optional):
 
 - **Paths:** limit discovery to these directories. With none, scan the whole workspace.
 - **Focus:** free text such as "flakiness, coverage". Treat it as the Gate 2 priority answer and don't ask that again.
-- **`--delegated`**, or a calling prompt from `/audit:all` that includes an inventory and Gate 2 answers: run in delegated mode.
+- **`--delegated`**, or a calling prompt from `/all` that includes an inventory and Gate 2 answers: run in delegated mode.
 
 ## Scope
 
@@ -45,7 +41,7 @@ Never run E2E suites against shared, staging, or production environments, even i
 4. For each suite, collect: path, tool and version, target interfaces (web / API / mobile), browsers or devices, environments, test count (`rg -c` on test declarations), run time if visible, CI job and trigger (PR, merge, nightly, manual, post-deploy), retries configured, reporters and artefacts, and the last commit to the suite.
 5. Build the **journey map**, the core of this audit. List the product's critical user journeys from the docs, routes, navigation, and API surface: sign-up, sign-in and recovery, the main value flow (checkout, create, publish, …), payment, permissions and roles, and destructive actions. Then mark which journeys a test covers end to end, which only partly, and which not at all.
 
-**Gate 1.** Show the suite inventory, the environments, and the journey map, then ask with AskUserQuestion:
+**Gate 1.** Show the suite inventory, the environments, and the journey map, then ask with the structured question tool:
 
 - Is this inventory complete and correct? (Yes / Some are missing or wrong, tell me which)
 - Are the critical journeys right? (Yes (Recommended) / Add or remove some, tell me in Other)
@@ -59,7 +55,7 @@ For each distinct tool and version:
 2. Research current best practice **with web search, not memory**, for those exact versions: support status, recommended locator strategy (role- and test-id-based over CSS/XPath), auth reuse (storage state, session caching), recommended waiting and assertion APIs (auto-waiting, web-first assertions), parallelism and isolation guidance, and the tool's own flakiness guidance. Cite the source and date for each. If web search is unavailable, follow the contract's fallback.
 3. Write a one-paragraph "what good looks like" baseline per stack.
 
-**Gate 2.** Ask with one AskUserQuestion call. Skip any question already answered by `$ARGUMENTS`.
+**Gate 2.** Ask with one structured-question call. Skip any question already answered by the arguments.
 
 1. **Priority.** "Which matters most?" Options: Journey coverage first, with the default order (Recommended) / Flakiness and trust first / Speed and CI cost first / Maintainability first. The default order is journey coverage → reliability → CI gating → test data and environments → speed → maintainability → tooling.
 2. **Commands.** "What may I run?" Options:

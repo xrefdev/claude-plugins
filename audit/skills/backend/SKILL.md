@@ -5,7 +5,7 @@ argument-hint: "[path ...] [focus, e.g. \"security, data\"] [--delegated]"
 disable-model-invocation: true
 ---
 
-# /audit:backend — Back-End Audit
+# /backend — Back-End Audit
 
 You are a senior back-end engineer doing a **read-only** audit of the server-side code in this workspace. You don't know the stack in advance. Discover it, research current best practice for exactly what you find, ask the user targeted questions at two gates, then report severity-ranked findings in chat.
 
@@ -13,21 +13,17 @@ Be specific and terse. Don't praise, and don't pad with generic advice.
 
 ## Before you start
 
-Read the shared audit contract and follow it throughout. It defines the ground rules, evidence and confidence tags, severity, the finding format, the gates, delegated mode, and the overlap rule:
-
-```bash
-cat "${CLAUDE_PLUGIN_ROOT}/references/contract.md"
-```
+Read the shared audit contract and follow it throughout. It defines the ground rules, evidence and confidence tags, severity, the finding format, the gates, delegated mode, the overlap rule, and the tool names for each harness. It lives at `references/contract.md` in the plugin root, two directories above this `SKILL.md`: `<plugin>/skills/<domain>/SKILL.md` → `<plugin>/references/contract.md`.
 
 Finding IDs use the prefix `BE-`.
 
 ## Input
 
-`$ARGUMENTS` (all optional):
+Arguments, the text after the command (all optional):
 
 - **Paths:** limit discovery to these directories. With none, scan the whole workspace.
 - **Focus:** free text such as "security, data". Treat it as the Gate 2 priority answer and don't ask that again.
-- **`--delegated`**, or a calling prompt from `/audit:all` that includes an inventory and Gate 2 answers: run in delegated mode.
+- **`--delegated`**, or a calling prompt from `/all` that includes an inventory and Gate 2 answers: run in delegated mode.
 
 ## Scope
 
@@ -45,7 +41,7 @@ Finding IDs use the prefix `BE-`.
 4. For each unit, collect: path, language and runtime version (from version files and lockfiles), framework and version, entry points (API, worker, cron), datastores and queues it uses (from config and client libraries), package manager and lockfile, test runner, lint/format/type tooling, CI config, rough size (`git ls-files` counts), and last commit date.
 5. Sketch the **service map**: which units call which (HTTP clients, queue topics, shared DBs). Mark shared databases between services. They are an architecture risk on their own.
 
-**Gate 1.** Show the inventory table, the service map, and the excluded list, then ask with AskUserQuestion:
+**Gate 1.** Show the inventory table, the service map, and the excluded list, then ask with the structured question tool:
 
 - Is this inventory complete and correct? (Yes / Some are missing or wrong, tell me which)
 - Which services have priority? (All equally (Recommended) / Prioritise some, name them)
@@ -59,7 +55,7 @@ For each distinct stack (language + framework + major version):
 2. Research current best practice **with web search, not memory**, for those exact versions: support and EOL dates for the runtime and framework, the framework's security guidance (e.g. its own security checklist), deprecated APIs and their replacements, recommended static-analysis and security linters, recommended ORM and migration practice, and recommended production settings. Cite the source and date for each. Prefer official docs, release notes, endoflife.date, and OWASP. If web search is unavailable, follow the contract's fallback.
 3. Write a one-paragraph "what good looks like" baseline per stack.
 
-**Gate 2.** Ask with one AskUserQuestion call. Skip any question already answered by `$ARGUMENTS`.
+**Gate 2.** Ask with one structured-question call. Skip any question already answered by the arguments.
 
 1. **Priority.** "Which matters most?" Options: Security first, with the default order (Recommended) / Data integrity and reliability first / Performance first / Dependencies and upgrades first. The default order is security → data → reliability → dependencies → API contracts → performance → observability → architecture → tooling.
 2. **Commands.** "What may I run?" Options:

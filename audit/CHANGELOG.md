@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Loads as a Cursor plugin as well as a Claude Code plugin: `.cursor-plugin/plugin.json` alongside `.claude-plugin/plugin.json`, with the same `skills/`, `agents/`, and `references/`.
+- Skill bodies are harness-neutral. They locate `references/contract.md` relative to their own `SKILL.md` instead of `${CLAUDE_PLUGIN_ROOT}`, take their arguments from the text after the command instead of `$ARGUMENTS`, and name actions instead of tools. The contract gains a "Tools and names per harness" table.
+- `all` dispatches the `auditor` subagent by short name (`audit:auditor` in Claude Code) and resolves the plugin root from its own location before handing paths to the auditors.
+- The `auditor` agent declares `readonly: true`, which is what Cursor enforces (it ignores `tools:`).
+- Commands are referred to as `/all`, `/frontend`, … (`/audit:all`, … in Claude Code).
+
 ## 0.2.0
 
 - New `backend` domain: security (injection, IDOR, tenancy, SSRF), data integrity (migrations, transactions, idempotency), reliability (timeouts, retries, queues), dependencies, API contracts, performance, observability, architecture, and tooling, with a service map.

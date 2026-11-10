@@ -1,0 +1,26 @@
+{
+  "name": "audit",
+  "version": "0.3.0",
+  "description": "Read-only, evidence-based codebase audits that discover the stack, check it against current best practice, and report severity-ranked findings: frontend, backend, infra, tests, e2e, assets, and all.",
+  "author": {
+    "name": "Imran Shahid"
+  },
+  "homepage": "https://github.com/ishahid/claude-plugins/tree/main/audit",
+  "repository": "https://github.com/ishahid/claude-plugins",
+  "license": "MIT",
+  "keywords": [
+    "audit",
+    "frontend",
+    "backend",
+    "infrastructure",
+    "security",
+    "dependencies",
+    "accessibility",
+    "performance",
+    "testing",
+    "e2e",
+    "assets"
+  ],
+  "skills": "./skills/",
+  "agents": "./agents/"
+}

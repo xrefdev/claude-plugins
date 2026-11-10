@@ -1,7 +1,7 @@
 {
   "name": "audit",
   "displayName": "audit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Read-only, evidence-based codebase audits that discover the stack, check it against current best practice, and report severity-ranked findings: frontend, backend, infra, tests, e2e, assets, and all.",
   "author": {
     "name": "Imran Shahid"

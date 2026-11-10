@@ -5,7 +5,7 @@ argument-hint: "feature-slug [T-n]"
 disable-model-invocation: true
 ---
 
-# /ai-sdlc:build — Implement the Plan
+# /build — Implement the Plan
 
 You are running **stage 6 of 7** of the AI SDLC (`intent → specs → design → plan → review → build → verify`).
 Your job is to execute `04-plan.md` exactly: one task, one red/green cycle at a time, with evidence for each.
@@ -14,18 +14,18 @@ Be rigorous and specific. Don't praise, and don't pad.
 
 ## Input
 
-`$ARGUMENTS` — the feature slug, optionally followed by a task ID (`T-n`) to run just that task. If the slug is empty, list folders under `docs/ai-sdlc/` and ask which one.
+**Arguments** (the text after the command) — the feature slug, optionally followed by a task ID (`T-n`) to run just that task. If the slug is empty, list folders under `docs/ai-sdlc/` and ask which one.
 
 ## Preconditions
 
 - `01-intent.md` to `04-plan.md` exist in `docs/ai-sdlc/<slug>/` and are `Status: Approved`. If any is missing or unapproved, stop and point the user at the missing stage.
-- `04-plan.md`'s `Decisions` section has a `Review` entry with a verdict of `Ready`, or `Ready with fixes` whose fixes were applied. If there is none, or the verdict was `Not ready`, stop and send the user to `/ai-sdlc:review <slug>`.
+- `04-plan.md`'s `Decisions` section has a `Review` entry with a verdict of `Ready`, or `Ready with fixes` whose fixes were applied. If there is none, or the verdict was `Not ready`, stop and send the user to `/review <slug>`.
 - Run `git status` and `git branch --show-current`. If the working tree has unrelated changes, say so and ask how to proceed. If you are on the repository's default branch, ask whether to create a feature branch first.
 - Ask once, before starting: **commit after each task, or leave all changes uncommitted?** Default to uncommitted. Never push.
 
 ## 1. Pick the task
 
-- Work through the plan's tasks in order. Start at the first unchecked task whose dependencies are all checked (`- [x]`), or at the task given in `$ARGUMENTS`.
+- Work through the plan's tasks in order. Start at the first unchecked task whose dependencies are all checked (`- [x]`), or at the task given in the arguments.
 - Don't start a task whose dependencies aren't done. Run one task at a time even if the plan marks tasks as parallel.
 - Before each task, read the files it names, so you edit what is really there.
 
@@ -60,7 +60,7 @@ tests_locked=false
 - Report the `Done when` command and its result. If it fails, fix the cause within the task. If three attempts fail, stop and tell the user what you tried.
 - Check the task off in the plan (`- [x]`), in the same step as the code.
 - **If what you built differs from the plan** — a file touched that the task doesn't list, a different approach, an added or skipped step — update the task in `04-plan.md` to match what was done, and add a dated line to its `Decisions` section saying what changed and why.
-- **If you need a design decision the documents don't make**, or the work contradicts the spec or design, stop. Don't decide it yourself: tell the user and point them at `/ai-sdlc:design <slug>` or `/ai-sdlc:specs <slug>`.
+- **If you need a design decision the documents don't make**, or the work contradicts the spec or design, stop. Don't decide it yourself: tell the user and point them at `/design <slug>` or `/specs <slug>`.
 - If the user chose to commit after each task, commit now with a message naming the task. Otherwise leave the changes in the working tree.
 - Delete `.current-task` when the task is done.
 
@@ -73,4 +73,4 @@ When every task is checked:
 - Run the plan's full test, lint, and type-check commands, and report the results.
 - Make sure `.current-task` no longer exists.
 - Finish with `git diff --stat`, a summary of what was built in five bullets or fewer, and anything deferred or left unchecked with the reason.
-- Tell the user the next step is `/ai-sdlc:verify <slug>`, where an independent verifier checks the result. Don't declare the feature done yourself.
+- Tell the user the next step is `/verify <slug>`, where an independent verifier checks the result. Don't declare the feature done yourself.

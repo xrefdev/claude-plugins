@@ -5,7 +5,7 @@ argument-hint: "feature-slug"
 disable-model-invocation: true
 ---
 
-# /ai-sdlc:design — Technical Design
+# /design — Technical Design
 
 You are running **stage 3 of 7** of the AI SDLC (`intent → specs → design → plan → review → build → verify`).
 Your job is to decide **how** the system will satisfy every requirement, in enough detail that the plan can be written without making new design decisions.
@@ -13,7 +13,7 @@ Be rigorous and specific. Don't praise, and don't pad. Do **not** write implemen
 
 ## Input
 
-`$ARGUMENTS` — the feature slug. If empty, list folders under `docs/ai-sdlc/` and ask which one.
+**Arguments** (the text after the command) — the feature slug. If empty, list folders under `docs/ai-sdlc/` and ask which one.
 
 ## Preconditions
 
@@ -31,7 +31,7 @@ Be rigorous and specific. Don't praise, and don't pad. Do **not** write implemen
 
 - Propose 2–3 viable approaches. For each: how it works, what it reuses, pros, cons, risks, and rough effort.
 - Prefer the simplest approach that satisfies every requirement and fits existing patterns. Call out scope that could be cut or deferred.
-- Ask the user to choose with the AskUserQuestion tool, with your recommended option first and marked "(Recommended)". Record the choice and the rejected alternatives as a decision.
+- Ask the user to choose with the structured question tool (`AskQuestion` in Cursor, `AskUserQuestion` in Claude Code), with your recommended option first and marked "(Recommended)". Record the choice and the rejected alternatives as a decision.
 
 ## 3. Detail the design
 
@@ -56,7 +56,7 @@ Cover every area below that the feature touches. Skip an area only if it genuine
 - **Decisions** — ADR-style entries `D-1`, `D-2`, … (context, decision, consequences, alternatives rejected).
 - **Risks** — technical and delivery risks with mitigations; unknowns that need a spike.
 
-Ask questions with the AskUserQuestion tool in batches of up to 4, highest impact first. Each question gets 2–4 concrete options, with your recommended option first and marked "(Recommended)". Don't ask about things you can decide yourself with a sensible default; list those as **Assumptions I'll apply** so the user can veto them.
+Ask questions with the structured question tool in batches of up to 4, highest impact first. Each question gets 2–4 concrete options, with your recommended option first and marked "(Recommended)". Don't ask about things you can decide yourself with a sensible default; list those as **Assumptions I'll apply** so the user can veto them.
 
 ## 4. Self-check
 
@@ -85,7 +85,7 @@ Read [templates/design.md](templates/design.md) before writing, in either mode.
 ## 5. Write and present
 
 - Write `docs/ai-sdlc/<slug>/03-design.md` following the Template section above, with `Status: Draft`.
-- Present: the chosen approach in two lines, the key decisions, the requirement mapping, the main risks, the assumptions applied, and any remaining open questions (asked via AskUserQuestion as above).
+- Present: the chosen approach in two lines, the key decisions, the requirement mapping, the main risks, the assumptions applied, and any remaining open questions (asked via the structured question tool as above).
 - Revise until the user approves. Then set `Status: Approved` and today's date.
 - Don't commit. Finish with `git diff --stat docs/ai-sdlc/<slug>/`.
 
@@ -96,7 +96,7 @@ Read [templates/design.md](templates/design.md) before writing, in either mode.
 - Key decisions and rejected alternatives are recorded.
 - The user has explicitly approved the design.
 
-When done, tell the user the next step is `/ai-sdlc:plan <slug>`.
+When done, tell the user the next step is `/plan <slug>`.
 
 ## Revise mode
 

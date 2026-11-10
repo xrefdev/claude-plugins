@@ -5,7 +5,7 @@ argument-hint: "feature-slug"
 disable-model-invocation: true
 ---
 
-# /ai-sdlc:plan — Implementation Plan
+# /plan — Implementation Plan
 
 You are running **stage 4 of 7** of the AI SDLC (`intent → specs → design → plan → review → build → verify`).
 Your job is to turn the design into a task list that an engineer — or Claude — can execute one red/green cycle at a time, without making new design decisions.
@@ -13,7 +13,7 @@ Be rigorous and specific. Don't praise, and don't pad. Do **not** start implemen
 
 ## Input
 
-`$ARGUMENTS` — the feature slug. If empty, list folders under `docs/ai-sdlc/` and ask which one.
+**Arguments** (the text after the command) — the feature slug. If empty, list folders under `docs/ai-sdlc/` and ask which one.
 
 ## Preconditions
 
@@ -46,7 +46,7 @@ Be rigorous and specific. Don't praise, and don't pad. Do **not** start implemen
 - **Verification task** — a final end-to-end / smoke test of the feature against the intent's goals.
 - **Docs-sync task** — updates to `CLAUDE.md`, `AGENTS.md`, contract docs, or other source-of-truth docs listed in the design's source-of-truth impact.
 
-Ask questions with the AskUserQuestion tool in batches of up to 4, highest impact first. Each question gets 2–4 concrete options, with your recommended option first and marked "(Recommended)". Don't ask about things you can decide yourself with a sensible default; list those as **Assumptions I'll apply** so the user can veto them.
+Ask questions with the structured question tool (`AskQuestion` in Cursor, `AskUserQuestion` in Claude Code) in batches of up to 4, highest impact first. Each question gets 2–4 concrete options, with your recommended option first and marked "(Recommended)". Don't ask about things you can decide yourself with a sensible default; list those as **Assumptions I'll apply** so the user can veto them.
 
 ## 3. Self-check
 
@@ -57,7 +57,7 @@ Before presenting, verify and fix:
 - **Done checks:** every task ends with a runnable command that exists in this project, or an explicit manual check.
 - **Ordering:** no task depends on one that comes after it; parallel tasks really touch disjoint files.
 - **Size:** no task is larger than one red/green cycle; split any that are.
-- **Consistency:** file paths, names, and fields match the design; no new design decisions were made — if one was needed, stop and send the user back to `/ai-sdlc:design`.
+- **Consistency:** file paths, names, and fields match the design; no new design decisions were made — if one was needed, stop and send the user back to `/design`.
 - **Completeness:** spikes, rollout, verification, and docs-sync tasks are present.
 
 ## Template
@@ -77,7 +77,7 @@ Read [templates/plan.md](templates/plan.md) before writing, in either mode.
 ## 4. Write and present
 
 - Write `docs/ai-sdlc/<slug>/04-plan.md` following the Template section above, with `Status: Draft`.
-- Present: the milestones with task counts, the critical path, tasks that can run in parallel, the main risks, the assumptions applied, and any remaining open questions (asked via AskUserQuestion as above).
+- Present: the milestones with task counts, the critical path, tasks that can run in parallel, the main risks, the assumptions applied, and any remaining open questions (asked via the structured question tool as above).
 - Revise until the user approves. Then set `Status: Approved` and today's date.
 - Don't commit. Finish with `git diff --stat docs/ai-sdlc/<slug>/`.
 
@@ -88,7 +88,7 @@ Read [templates/plan.md](templates/plan.md) before writing, in either mode.
 - Spikes, rollout, verification, and docs-sync tasks are present.
 - The user has explicitly approved the plan.
 
-When done, tell the user the next step is `/ai-sdlc:review <slug>` — the final check before implementation starts.
+When done, tell the user the next step is `/review <slug>` — the final check before implementation starts.
 
 ## Revise mode
 
@@ -97,4 +97,4 @@ When `04-plan.md` already exists:
 - Read it and ask what has changed and why (or re-derive from a revised design).
 - Make minimal, targeted edits that keep its structure and voice. Keep task IDs stable; retire a task by marking it `Withdrawn` rather than renumbering, and don't touch tasks already checked off unless asked.
 - Record the change in its `Decisions` section, dated today.
-- Set `Status: Draft` until the user re-approves, and tell the user to re-run `/ai-sdlc:review <slug>`.
+- Set `Status: Draft` until the user re-approves, and tell the user to re-run `/review <slug>`.

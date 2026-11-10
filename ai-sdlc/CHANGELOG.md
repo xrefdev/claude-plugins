@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0
+
+- Loads as a Cursor plugin as well as a Claude Code plugin: `.cursor-plugin/plugin.json` alongside `.claude-plugin/plugin.json`, with the same `skills/` and `agents/`.
+- Skill bodies are harness-neutral. They no longer rely on `${CLAUDE_PLUGIN_ROOT}` or `$ARGUMENTS`, name actions instead of tools (`AskQuestion` in Cursor, `AskUserQuestion` in Claude Code), and refer to the stages as `/intent`, `/specs`, … (`/ai-sdlc:intent`, … in Claude Code).
+- `review` and `verify` dispatch the `reviewer` and `verifier` subagents by short name; both agents now declare `readonly: true`, which is what Cursor enforces (it ignores `tools:`).
+- Guardrails run in Cursor via `hooks/hooks-cursor.json`. In Cursor the two "ask" rules become an allow plus a message to the agent, because Cursor does not enforce `ask` before a tool call; the test-lock rule still denies. Guardrails can now also be enabled with a `docs/ai-sdlc/.guardrails` marker file, which works in both harnesses.
+- `guard.sh` resolves the project root from the hook payload (`workspace_roots`) or `CURSOR_PROJECT_DIR`, not the hook process's working directory.
+- `template_mode` is a Claude Code option only; Cursor always uses `guide`.
+
 ## 0.3.1
 
 - Skill descriptions and argument hints no longer contain literal angle brackets (`<feature>`), which some loaders read as XML tags and rejected, so the skill never registered.

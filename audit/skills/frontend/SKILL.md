@@ -5,7 +5,7 @@ argument-hint: "[path ...] [focus, e.g. \"security, perf\"] [--delegated]"
 disable-model-invocation: true
 ---
 
-# /audit:frontend — Front-End Audit
+# /frontend — Front-End Audit
 
 You are a senior front-end engineer doing a **read-only** audit of the browser code in this workspace. You don't know the stack in advance. Discover it, research current best practice for exactly what you find, ask the user targeted questions at two gates, then report severity-ranked findings in chat.
 
@@ -13,21 +13,17 @@ Be specific and terse. Don't praise, and don't pad with generic advice.
 
 ## Before you start
 
-Read the shared audit contract and follow it throughout. It defines the ground rules, evidence and confidence tags, severity, the finding format, the gates, and delegated mode:
-
-```bash
-cat "${CLAUDE_PLUGIN_ROOT}/references/contract.md"
-```
+Read the shared audit contract and follow it throughout. It defines the ground rules, evidence and confidence tags, severity, the finding format, the gates, delegated mode, and the tool names for each harness. It lives at `references/contract.md` in the plugin root, two directories above this `SKILL.md`: `<plugin>/skills/<domain>/SKILL.md` → `<plugin>/references/contract.md`.
 
 Finding IDs use the prefix `FE-`.
 
 ## Input
 
-`$ARGUMENTS` (all optional):
+Arguments, the text after the command (all optional):
 
 - **Paths:** limit discovery to these directories. With none, scan the whole workspace (the working directory and any added directories).
 - **Focus:** free text such as "security, perf". Treat it as the user's Gate 2 priority answer and don't ask that question again.
-- **`--delegated`**, or a calling prompt from `/audit:all` that includes an inventory and Gate 2 answers: run in delegated mode as the contract describes.
+- **`--delegated`**, or a calling prompt from `/all` that includes an inventory and Gate 2 answers: run in delegated mode as the contract describes.
 
 ## Scope
 
@@ -46,7 +42,7 @@ Don't assume how many repos there are or where they live.
    - Framework config files (`angular.json`, `vite.config.*`, `next.config.*`, `nuxt.config.*`, `svelte.config.*`, `astro.config.*`, `webpack.config.*`), `index.html`, `manifest.json` for extensions, and template dirs with bundled assets.
 4. For each unit, collect: path, framework and version (from the lockfile, not the range), language and version, package manager and lockfile, build tool, test runner(s), lint/format tooling, CI config, rough size (`git ls-files` counts of source and test files), and last commit date.
 
-**Gate 1.** Show the inventory table plus the excluded list, then ask with AskUserQuestion:
+**Gate 1.** Show the inventory table plus the excluded list, then ask with the structured question tool:
 
 - Is this inventory complete and correct? (Yes / Some are missing or wrong, tell me which)
 - Which units have priority? (All equally (Recommended) / Prioritise some, name them)
@@ -60,7 +56,7 @@ For each distinct stack (framework + major version):
 2. Research current best practice **with web search, not memory**, for that exact major version: support and EOL status (with dates), idiomatic patterns for the version, deprecated APIs and their replacements, recommended lint rules and plugins (including accessibility rules), recommended test tooling, and recommended build settings such as budgets. Prefer official docs, release notes, and endoflife.date. Cite the source and date for each. If web search is unavailable, follow the contract's fallback.
 3. Write a one-paragraph "what good looks like" baseline per stack. Measure the Phase 3 findings against this baseline, not against a generic checklist.
 
-**Gate 2.** Ask with one AskUserQuestion call. Skip any question already answered by `$ARGUMENTS`.
+**Gate 2.** Ask with one structured-question call. Skip any question already answered by the arguments.
 
 1. **Priority.** "Which matters most?" Options: Security first, with the default order (Recommended) / Performance and UX first / Test quality first / Accessibility first. The default order is security → dependencies → accessibility → tests → performance → architecture → tooling. Move the chosen dimension to the front.
 2. **Commands.** "What may I run?" Options:

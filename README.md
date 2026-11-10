@@ -1,17 +1,19 @@
 # claude-plugins
 
-A [Claude Code](https://docs.claude.com/en/docs/claude-code) plugin marketplace.
+A plugin marketplace for [Claude Code](https://docs.claude.com/en/docs/claude-code) and [Cursor](https://cursor.com/docs/plugins). Each plugin ships one set of skills and agents that both harnesses load.
 
 ## Plugins
 
-| Plugin | Commands | Description |
+| Plugin | Commands (Cursor / Claude Code) | Description |
 |---|---|---|
-| [ai-sdlc](ai-sdlc/) | `/ai-sdlc:intent`, `/ai-sdlc:specs`, `/ai-sdlc:design`, `/ai-sdlc:plan`, `/ai-sdlc:review`, `/ai-sdlc:build`, `/ai-sdlc:verify` | A staged, artifact-driven AI software development lifecycle. |
-| [audit](audit/) | `/audit:frontend`, `/audit:backend`, `/audit:infra`, `/audit:tests`, `/audit:e2e`, `/audit:assets`, `/audit:all` | Read-only, evidence-based codebase audits with severity-ranked findings. |
+| [ai-sdlc](ai-sdlc/) | `/intent`, `/specs`, `/design`, `/plan`, `/review`, `/build`, `/verify` — in Claude Code `/ai-sdlc:intent`, … | A staged, artifact-driven AI software development lifecycle. |
+| [audit](audit/) | `/frontend`, `/backend`, `/infra`, `/tests`, `/e2e`, `/assets`, `/all` — in Claude Code `/audit:frontend`, … | Read-only, evidence-based codebase audits with severity-ranked findings. |
 
 ## Installation
 
-Add the marketplace once, then install any plugin from it as `<plugin>@ishahid`. In Claude Code:
+### Claude Code
+
+Add the marketplace once, then install any plugin from it as `<plugin>@ishahid`:
 
 ```
 /plugin marketplace add ishahid/claude-plugins
@@ -27,9 +29,7 @@ claude plugin install ai-sdlc@ishahid
 claude plugin install audit@ishahid
 ```
 
-### For a whole team
-
-Add this to a project's `.claude/settings.json` so everyone who opens it is offered the marketplace and its plugins:
+For a whole team, add this to a project's `.claude/settings.json` so everyone who opens it is offered the marketplace and its plugins:
 
 ```json
 {
@@ -45,9 +45,7 @@ Add this to a project's `.claude/settings.json` so everyone who opens it is offe
 }
 ```
 
-### Updating and uninstalling
-
-Refresh the marketplace to pick up new plugin versions, then uninstall any plugin you no longer want:
+Refresh the marketplace to pick up new versions, and uninstall what you no longer want:
 
 ```
 /plugin marketplace update ishahid
@@ -55,23 +53,33 @@ Refresh the marketplace to pick up new plugin versions, then uninstall any plugi
 /plugin uninstall audit@ishahid
 ```
 
+### Cursor
+
+The repo carries a `.cursor-plugin/marketplace.json`, so in Cursor open **Settings → Customize → Plugins**, choose **From GitHub Repository**, enter `ishahid/claude-plugins`, and install `ai-sdlc` or `audit`. Teams can add the repo as a team marketplace in the dashboard instead. Cursor loads the same `skills/` and `agents/` that Claude Code does; the ai-sdlc guardrail hook ships in Cursor form as `ai-sdlc/hooks/hooks-cursor.json`.
+
+Two things differ in Cursor. Commands are not namespaced (`/intent`, not `/ai-sdlc:intent`), and plugins have no per-user options, so ai-sdlc's `template_mode` is always `guide` and its guardrails are enabled with a marker file instead (see the [ai-sdlc README](ai-sdlc/README.md#configuration)).
+
 ## Repository layout
 
 ```
 claude-plugins/
 ├── .claude-plugin/
-│   └── marketplace.json     # Marketplace "ishahid": lists every plugin below
+│   └── marketplace.json     # Claude Code marketplace "ishahid": lists every plugin below
+├── .cursor-plugin/
+│   └── marketplace.json     # The same list, in Cursor's format
 ├── ai-sdlc/                 # One folder per plugin
 │   ├── .claude-plugin/plugin.json
+│   ├── .cursor-plugin/plugin.json
 │   ├── skills/
 │   ├── agents/
-│   ├── hooks/
+│   ├── hooks/               # hooks.json (Claude Code), hooks-cursor.json (Cursor), guard.sh (both)
 │   ├── scripts/
 │   ├── evals/
 │   ├── CHANGELOG.md
 │   └── README.md
 ├── audit/
 │   ├── .claude-plugin/plugin.json
+│   ├── .cursor-plugin/plugin.json
 │   ├── skills/              # frontend, backend, infra, tests, e2e, assets, all
 │   ├── agents/              # auditor
 │   ├── references/          # contract.md shared by every audit domain
@@ -81,11 +89,22 @@ claude-plugins/
 └── README.md
 ```
 
+## Writing for both harnesses
+
+Skills and agents are shared verbatim, so they must not depend on one harness:
+
+- Name actions, not tools ("ask with the structured question tool", "dispatch the `reviewer` subagent"). Where a tool name is unavoidable, give both: `AskQuestion` in Cursor, `AskUserQuestion` in Claude Code.
+- Refer to files inside the plugin relative to the skill's own `SKILL.md`, never through `${CLAUDE_PLUGIN_ROOT}`. Cursor does not expand it.
+- Take input from "the text after the command", not `$ARGUMENTS`.
+- Refer to commands by their short name (`/specs`); Claude Code users know their prefix.
+- Mark read-only agents with both `tools:` (Claude Code) and `readonly: true` (Cursor).
+- Hook scripts must handle both payloads and output shapes; `ai-sdlc/hooks/guard.sh` shows how.
+
 ## Adding a plugin
 
-1. Create `<plugin-name>/.claude-plugin/plugin.json` with at least a `name`.
+1. Create `<plugin-name>/.claude-plugin/plugin.json` and `<plugin-name>/.cursor-plugin/plugin.json`, each with at least a `name`. In the Cursor one, point `skills`, `agents`, and `hooks` at the folders explicitly.
 2. Add components (`skills/`, `agents/`, `hooks/`, …) inside that folder.
-3. Add an entry to `plugins` in `.claude-plugin/marketplace.json` with `"source": "./<plugin-name>"`.
+3. Add an entry to `plugins` in both `.claude-plugin/marketplace.json` and `.cursor-plugin/marketplace.json` with `"source": "./<plugin-name>"`.
 4. Validate:
 
    ```bash
@@ -100,10 +119,16 @@ claude-plugins/
 Load one plugin from your working copy without installing it:
 
 ```bash
+# Claude Code
 claude --plugin-dir ./ai-sdlc
+
+# Cursor: copy (not symlink) into the local plugins folder, then Developer: Reload Window
+cp -R ./ai-sdlc ~/.cursor/plugins/local/ai-sdlc
 ```
 
-To release a new version of a plugin, bump `version` in both `<plugin>/.claude-plugin/plugin.json` and its entry in `.claude-plugin/marketplace.json`, and add an entry to the plugin's `CHANGELOG.md`.
+A marketplace install of the same plugin name takes precedence over the local copy in Cursor, so uninstall it first when developing.
+
+To release a new version of a plugin, bump `version` in all four places — `<plugin>/.claude-plugin/plugin.json`, `<plugin>/.cursor-plugin/plugin.json`, and the plugin's entry in both marketplace files — and add an entry to the plugin's `CHANGELOG.md`. `ai-sdlc/evals/run.sh` fails if they disagree.
 
 ## License
 

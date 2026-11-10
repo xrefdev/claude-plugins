@@ -5,7 +5,7 @@ argument-hint: "feature-slug"
 disable-model-invocation: true
 ---
 
-# /ai-sdlc:review — Pre-Implementation Review
+# /review — Pre-Implementation Review
 
 You are running **stage 5 of 7** of the AI SDLC (`intent → specs → design → plan → review → build → verify`).
 This is the **final check before any implementation starts**. Nothing gets built until these documents are right.
@@ -14,7 +14,7 @@ Be rigorous and specific. Don't praise, and don't pad.
 
 ## Input
 
-`$ARGUMENTS` — the feature slug. If empty, list folders under `docs/ai-sdlc/` and ask which one.
+**Arguments** (the text after the command) — the feature slug. If empty, list folders under `docs/ai-sdlc/` and ask which one.
 
 ## Preconditions
 
@@ -24,15 +24,15 @@ Be rigorous and specific. Don't praise, and don't pad.
 
 ## 1. Check the mechanics
 
-Run the traceability script on the feature folder and keep its output:
+Run the traceability script that ships with this plugin on the feature folder and keep its output. The script is `scripts/trace.sh` in the plugin root, two directories above this `SKILL.md` (`<plugin>/skills/review/SKILL.md` → `<plugin>/scripts/trace.sh`). Resolve that to an absolute path first; the reviewer needs it too.
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/trace.sh" docs/ai-sdlc/<slug>
+<plugin>/scripts/trace.sh docs/ai-sdlc/<slug>
 ```
 
 ## 2. Delegate the review
 
-Launch the `ai-sdlc:reviewer` agent with the Agent tool. Give it the feature folder, the path of the trace script, and the script's output. It reads every document, the project's source of truth, and the code, and returns a verdict, a findings table, traceability gaps, assumptions, and open questions.
+Dispatch the `reviewer` subagent (Claude Code names it `ai-sdlc:reviewer`). Give it the feature folder, the absolute path of the trace script, and the script's output. It reads every document, the project's source of truth, and the code, and returns a verdict, a findings table, traceability gaps, assumptions, and open questions.
 
 - Don't review the documents yourself first, and don't soften, merge, or drop its findings. You may add a finding of your own if you notice one, and say it is yours.
 - If the agent's report is missing a section, send it back to fill the gap.
@@ -53,7 +53,7 @@ Don't edit any document yet, and don't write a review file. Present the reviewer
    Severity is `Blocker` / `Major` / `Minor` / `Suggestion`. Keep each finding to one or two sentences and cite the exact file and section. Group by document if there are more than 15.
 3. **Traceability gaps:** a short list of goal ↔ spec ↔ design ↔ plan mismatches.
 4. **Assumptions I'll apply:** defaults from the report, listed so the user can veto them.
-5. **Open questions:** only what the reviewer could not settle from the documents or the code. Ask them with the AskUserQuestion tool in batches of up to 4, highest severity first. Each question gets 2–4 concrete options, with your recommended option first and marked "(Recommended)".
+5. **Open questions:** only what the reviewer could not settle from the documents or the code. Ask them with the structured question tool (`AskQuestion` in Cursor, `AskUserQuestion` in Claude Code) in batches of up to 4, highest severity first. Each question gets 2–4 concrete options, with your recommended option first and marked "(Recommended)".
 
 Then stop and wait for answers and for approval of the proposed fixes.
 
@@ -65,10 +65,10 @@ Once the user has answered and approved:
 - Record the decisions in the `Decisions` section of the most relevant document, dated today.
 - Keep each edited document at `Status: Approved` — the user approved these edits as part of this review.
 - If the project's source-of-truth docs (`CLAUDE.md`, `AGENTS.md`, and the docs they point to) must change because of this feature, add those changes as plan tasks. Don't edit those files now unless the user says so.
-- If a finding needs a stage redone rather than patched, say which (e.g. `/ai-sdlc:design <slug>`) instead of rewriting it here.
+- If a finding needs a stage redone rather than patched, say which (e.g. `/design <slug>`) instead of rewriting it here.
 - Add one dated entry to the `Decisions` section of `04-plan.md`, headed `Review <today>`, with the final verdict and a line for every finding left `Deferred` or `Rejected` and why. Fixed findings need no entry beyond the decisions already recorded.
 - Don't create `05-review.md` or any other new file.
 - Don't commit.
 - Finish with `git diff --stat docs/ai-sdlc/<slug>/`, a summary of what changed in five bullets or fewer, and any findings left unresolved (deferred or rejected) with the reason.
 
-If the final verdict is **Ready**, summarize the plan's milestones and ask the user whether to begin implementing with `/ai-sdlc:build <slug>`.
+If the final verdict is **Ready**, summarize the plan's milestones and ask the user whether to begin implementing with `/build <slug>`.

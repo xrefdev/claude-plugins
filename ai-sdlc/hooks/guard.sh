@@ -1,24 +1,49 @@
 #!/usr/bin/env bash
-# ai-sdlc guardrails, run before Edit/Write/MultiEdit. Off unless the "guardrails" plugin option is true.
+# ai-sdlc guardrails, run before a file edit (Claude Code: Edit/Write/MultiEdit; Cursor: Write). Off unless enabled.
 #   1. Asks before a stage document is set to "Status: Approved".
 #   2. While a build task is active, asks before editing a file the task doesn't list.
 #   3. While a bug-fix task has its tests locked, denies edits to test files.
+#
+# Enable with either:
+#   - the "guardrails" plugin option (Claude Code), or
+#   - a marker file docs/ai-sdlc/.guardrails in the project (any harness).
+#
+# Harness differences handled here:
+#   - Claude Code sends hook_event_name "PreToolUse" and reads hookSpecificOutput.permissionDecision (allow|deny|ask).
+#   - Cursor sends "preToolUse" and reads a flat {permission, user_message, agent_message}. Cursor does not
+#     enforce "ask" for preToolUse, so an ask becomes allow plus an agent_message that states the condition.
+#   - Cursor's Write payload carries the whole new file in tool_input.content and no cwd; the project root is
+#     workspace_roots[0] or $CURSOR_PROJECT_DIR.
 set -u
 
-enabled="${CLAUDE_PLUGIN_OPTION_GUARDRAILS:-${CLAUDE_PLUGIN_OPTION_guardrails:-false}}"
-[ "$enabled" = "true" ] || exit 0
 command -v jq >/dev/null 2>&1 || exit 0
-
 input=$(cat)
-file=$(jq -r '.tool_input.file_path // empty' <<<"$input")
+
+event=$(jq -r '.hook_event_name // empty' <<<"$input")
+cursor=false
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ] || [ "$event" = preToolUse ]; then cursor=true; fi
+
+cwd=$(jq -r '.cwd // .workspace_roots[0] // empty' <<<"$input")
+cwd=${cwd:-${CURSOR_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-$PWD}}}
+
+enabled="${CLAUDE_PLUGIN_OPTION_GUARDRAILS:-${CLAUDE_PLUGIN_OPTION_guardrails:-false}}"
+[ "$enabled" = "true" ] || [ -f "$cwd/docs/ai-sdlc/.guardrails" ] || exit 0
+
+file=$(jq -r '.tool_input.file_path // .tool_input.path // empty' <<<"$input")
 [ -n "$file" ] || exit 0
-cwd=$(jq -r '.cwd // empty' <<<"$input")
-cwd=${cwd:-$PWD}
 rel=${file#"$cwd"/}
 
-respond() {
-  jq -n --arg d "$1" --arg r "$2" \
-    '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: $d, permissionDecisionReason: $r}}'
+respond() { # decision reason
+  if [ "$cursor" = true ]; then
+    case "$1" in
+      deny) jq -n --arg r "$2" '{permission: "deny", user_message: $r, agent_message: $r}' ;;
+      ask)  jq -n --arg r "Guardrail: $2 This edit was allowed because Cursor cannot pause here. If the user has not confirmed it, revert the edit and ask them first." \
+              '{permission: "allow", agent_message: $r}' ;;
+    esac
+  else
+    jq -n --arg d "$1" --arg r "$2" \
+      '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: $d, permissionDecisionReason: $r}}'
+  fi
   exit 0
 }
 
@@ -34,7 +59,7 @@ case "$rel" in
     fi
     exit 0
     ;;
-  docs/*|.claude/*)
+  docs/*|.claude/*|.cursor/*)
     exit 0
     ;;
 esac

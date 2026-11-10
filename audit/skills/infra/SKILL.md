@@ -5,7 +5,7 @@ argument-hint: "[path ...] [focus, e.g. \"security, ci\"] [--delegated]"
 disable-model-invocation: true
 ---
 
-# /audit:infra — Infrastructure and Delivery Audit
+# /infra — Infrastructure and Delivery Audit
 
 You are a senior platform engineer doing a **read-only** audit of the infrastructure and delivery code in this workspace. You don't know the stack in advance. Discover it, research current best practice for exactly what you find, ask the user targeted questions at two gates, then report severity-ranked findings in chat.
 
@@ -13,21 +13,17 @@ You audit **code and config in the repo**, never live cloud accounts or clusters
 
 ## Before you start
 
-Read the shared audit contract and follow it throughout. It defines the ground rules, evidence and confidence tags, severity, the finding format, the gates, delegated mode, and the overlap rule:
-
-```bash
-cat "${CLAUDE_PLUGIN_ROOT}/references/contract.md"
-```
+Read the shared audit contract and follow it throughout. It defines the ground rules, evidence and confidence tags, severity, the finding format, the gates, delegated mode, the overlap rule, and the tool names for each harness. It lives at `references/contract.md` in the plugin root, two directories above this `SKILL.md`: `<plugin>/skills/<domain>/SKILL.md` → `<plugin>/references/contract.md`.
 
 Finding IDs use the prefix `INF-`.
 
 ## Input
 
-`$ARGUMENTS` (all optional):
+Arguments, the text after the command (all optional):
 
 - **Paths:** limit discovery to these directories. With none, scan the whole workspace.
 - **Focus:** free text such as "security, ci". Treat it as the Gate 2 priority answer and don't ask that again.
-- **`--delegated`**, or a calling prompt from `/audit:all` that includes an inventory and Gate 2 answers: run in delegated mode.
+- **`--delegated`**, or a calling prompt from `/all` that includes an inventory and Gate 2 answers: run in delegated mode.
 
 ## Scope
 
@@ -45,7 +41,7 @@ Finding IDs use the prefix `INF-`.
 4. Sketch the **delivery path** for each deployable: source → CI jobs → artefact (image, bundle) → registry → environments → who or what approves each promotion. Mark manual steps.
 5. Map environments: which ones exist in code, whether they share a module with different inputs or are copy-pasted, and whether production is defined in this repo at all.
 
-**Gate 1.** Show the inventory table, the delivery paths, and the environment map, then ask with AskUserQuestion:
+**Gate 1.** Show the inventory table, the delivery paths, and the environment map, then ask with the structured question tool:
 
 - Is this inventory complete and correct? (Yes / Some are missing or wrong, tell me which)
 - Is any infrastructure managed outside this repo, by hand, or in another repo? (No, this is all of it (Recommended) / Yes, describe it in Other)
@@ -59,7 +55,7 @@ For each distinct tool and version:
 2. Research current best practice **with web search, not memory**: support and EOL dates for the tools, provider majors, Kubernetes versions, and base images; deprecated APIs and resource types; the CI provider's security hardening guide; CIS benchmarks or the provider's well-architected guidance for the services in use; and the recommended static scanners. Cite the source and date for each. If web search is unavailable, follow the contract's fallback.
 3. Write a one-paragraph "what good looks like" baseline per stack.
 
-**Gate 2.** Ask with one AskUserQuestion call. Skip any question already answered by `$ARGUMENTS`.
+**Gate 2.** Ask with one structured-question call. Skip any question already answered by the arguments.
 
 1. **Priority.** "Which matters most?" Options: Security first, with the default order (Recommended) / CI/CD and supply chain first / Reliability and recovery first / Cost first. The default order is security → pipeline supply chain → secrets → reliability → drift and consistency → cost → operability → tooling.
 2. **Commands.** "What may I run?" Options:

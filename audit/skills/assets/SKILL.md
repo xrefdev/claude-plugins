@@ -5,7 +5,7 @@ argument-hint: "[path ...] [focus, e.g. \"performance, licensing\"] [--delegated
 disable-model-invocation: true
 ---
 
-# /audit:assets — Static Asset Audit
+# /assets — Static Asset Audit
 
 You are a senior web-performance and build engineer doing a **read-only** audit of the static assets in this workspace and how they are produced, stored, and served. The questions you answer are: **are assets delivered fast, are we allowed to ship them, do they leak anything, and are they bloating the repo?**
 
@@ -13,21 +13,17 @@ Discover the assets and their pipeline, research current best practice, ask the 
 
 ## Before you start
 
-Read the shared audit contract and follow it throughout. It defines the ground rules, evidence and confidence tags, severity, the finding format, the gates, delegated mode, and the overlap rule:
-
-```bash
-cat "${CLAUDE_PLUGIN_ROOT}/references/contract.md"
-```
+Read the shared audit contract and follow it throughout. It defines the ground rules, evidence and confidence tags, severity, the finding format, the gates, delegated mode, the overlap rule, and the tool names for each harness. It lives at `references/contract.md` in the plugin root, two directories above this `SKILL.md`: `<plugin>/skills/<domain>/SKILL.md` → `<plugin>/references/contract.md`.
 
 Finding IDs use the prefix `AST-`.
 
 ## Input
 
-`$ARGUMENTS` (all optional):
+Arguments, the text after the command (all optional):
 
 - **Paths:** limit discovery to these directories. With none, scan the whole workspace.
 - **Focus:** free text such as "performance, licensing". Treat it as the Gate 2 priority answer and don't ask that again.
-- **`--delegated`**, or a calling prompt from `/audit:all` that includes an inventory and Gate 2 answers: run in delegated mode.
+- **`--delegated`**, or a calling prompt from `/all` that includes an inventory and Gate 2 answers: run in delegated mode.
 
 ## Scope
 
@@ -48,7 +44,7 @@ Finding IDs use the prefix `AST-`.
 
 5. For each unit, collect: asset directories, counts and total size by type, the largest 10 files, the pipeline in use, the hosting and CDN, LFS usage, and repo size (`git count-objects -vH`).
 
-**Gate 1.** Show the inventory by unit and type, the pipeline summary, and the largest files in the tree and in history, then ask with AskUserQuestion:
+**Gate 1.** Show the inventory by unit and type, the pipeline summary, and the largest files in the tree and in history, then ask with the structured question tool:
 
 - Is this inventory complete and correct? (Yes / Some are missing or wrong, tell me which)
 - Where do assets come from? (Mostly made in-house or by a design team (Recommended) / Mix of in-house, stock, and third-party, I'll describe it in Other)
@@ -60,7 +56,7 @@ Finding IDs use the prefix `AST-`.
 2. Research current best practice **with web search, not memory**: current browser support for AVIF, WebP, variable fonts, and `font-display`; Core Web Vitals guidance on images and fonts (LCP image priority, `fetchpriority`, layout-shift prevention, preloading); the framework's image and font component docs for the exact version; and SVG optimisation and security guidance. Cite the source and date for each. If web search is unavailable, follow the contract's fallback.
 3. Write a one-paragraph "what good looks like" baseline per unit.
 
-**Gate 2.** Ask with one AskUserQuestion call. Skip any question already answered by `$ARGUMENTS`.
+**Gate 2.** Ask with one structured-question call. Skip any question already answered by the arguments.
 
 1. **Priority.** "Which matters most?" Options: Delivery performance first, with the default order (Recommended) / Licensing and compliance first / Repo size and hygiene first / Accessibility first. The default order is delivery performance → licensing → security and privacy → accessibility → caching → repo hygiene → tooling.
 2. **Commands.** "What may I run?" Options:

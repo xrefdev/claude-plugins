@@ -5,22 +5,17 @@ argument-hint: "[domain ...] [--skip domain ...] [path ...]"
 disable-model-invocation: true
 ---
 
-# /audit:all — Full Audit
+# /all — Full Audit
 
-You run several audit domains as **one** audit: discover once, ask the gate questions once, have one `audit:auditor` agent per domain do the work in parallel, then merge everything into a single severity-ranked report. You coordinate and synthesise. The domain skills define the checks.
+You run several audit domains as **one** audit: discover once, ask the gate questions once, have one `auditor` subagent per domain do the work in parallel, then merge everything into a single severity-ranked report. You coordinate and synthesise. The domain skills define the checks.
 
 Be specific and terse. Don't praise, and don't pad.
 
 ## Before you start
 
-Read the shared contract, then list the available domains:
+Locate the plugin root: it is two directories above this `SKILL.md` (`<plugin>/skills/all/SKILL.md` → `<plugin>`). Resolve it to an absolute path and keep it; you will pass paths under it to the auditors. Then read the shared contract at `<plugin>/references/contract.md` and list the directories in `<plugin>/skills/`.
 
-```bash
-cat "${CLAUDE_PLUGIN_ROOT}/references/contract.md"
-ls "${CLAUDE_PLUGIN_ROOT}/skills"
-```
-
-**Every directory under `skills/` except `all` is a domain.** A domain that has no directory yet is not available. This is how new domains join `/audit:all` without this file changing. The known domains, in report order:
+**Every directory under `skills/` except `all` is a domain.** A domain that has no directory yet is not available. This is how new domains join `/all` without this file changing. The known domains, in report order:
 
 | Domain | ID prefix | Covers |
 |---|---|---|
@@ -35,7 +30,7 @@ A domain directory not listed here still runs. Take its ID prefix from its `SKIL
 
 ## Input
 
-`$ARGUMENTS` (all optional):
+Arguments, the text after the command (all optional):
 
 - **Domain names:** run only these.
 - **`--skip <domain ...>`:** run every available domain except these.
@@ -51,7 +46,7 @@ A unit can belong to several domains (e.g. a Next.js app is both `frontend` and 
 
 Some domains build a map as part of discovery (the `backend` service map, the `infra` delivery paths, the `tests` risk map, the `e2e` journey map). Include each one.
 
-**Gate 1.** Show one inventory with a section per domain, plus the combined excluded list, the maps, and a line per unavailable domain ("`infra`: not yet available"). Ask with AskUserQuestion:
+**Gate 1.** Show one inventory with a section per domain, plus the combined excluded list, the maps, and a line per unavailable domain ("`infra`: not yet available"). Ask with the structured question tool:
 
 - Is this inventory complete and correct?
 - Which domains or units have priority?
@@ -60,7 +55,7 @@ Some domains build a map as part of discovery (the `backend` service map, the `i
 
 ## 2. Ask once
 
-Build **one** Gate 2 from the domains' Gate 2 sections. Merge questions that ask the same thing (priority, commands, depth, steering) into one question that applies to every domain. A domain-specific question goes in only if its answer changes what that domain does. Respect the contract's limit of 4 questions per AskUserQuestion call. If more are left after merging, use a second call.
+Build **one** Gate 2 from the domains' Gate 2 sections. Merge questions that ask the same thing (priority, commands, depth, steering) into one question that applies to every domain. A domain-specific question goes in only if its answer changes what that domain does. Respect the contract's limit of 4 questions per structured-question call. If more are left after merging, use a second call.
 
 - **Priority:** offer the dimensions that the selected domains share (security, dependencies, tests, performance, tooling …).
 - **Commands:** three levels mapped onto each domain's own options: static only (Recommended) / local checks (each domain's middle option: installs with scripts off, lint, unit tests, offline validation) / full (each domain's highest option). Apply the level to every domain unless the user names exceptions, and tell each auditor which of its own options that level means.
@@ -71,9 +66,9 @@ Don't run Phase 2 (stack baseline) yourself. Each auditor does it for its domain
 
 ## 3. Dispatch
 
-Launch one `audit:auditor` agent per selected domain, **all in a single message** so they run in parallel. Give each one:
+Dispatch one `auditor` subagent per selected domain (Claude Code names it `audit:auditor`), **all in a single message** so they run in parallel. Give each one:
 
-- the domain name and the absolute path of its `SKILL.md` (resolve `${CLAUDE_PLUGIN_ROOT}` with Bash first)
+- the domain name and the absolute path of its `SKILL.md` under the plugin root you resolved earlier
 - the absolute path of the contract
 - that domain's confirmed inventory, and every map it built in Phase 1, as corrected at Gate 1
 - the Gate 2 answers, including any per-domain exceptions
@@ -102,4 +97,4 @@ Report **in chat only**. Write no files in the repo. Keep it under about 4,000 w
 8. **Could not verify:** per domain: what was skipped, why, and what it would take. Include unavailable domains.
 9. **Open questions for the team.**
 
-Finish by offering to save the full merged report, including all findings, to a file outside the repo, or to drill into one domain with its own `/audit:<domain>` command. Do neither unless the user asks.
+Finish by offering to save the full merged report, including all findings, to a file outside the repo, or to drill into one domain with its own `/<domain>` command. Do neither unless the user asks.
